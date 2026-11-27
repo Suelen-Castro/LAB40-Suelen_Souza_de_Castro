@@ -1,0 +1,38 @@
+name: CD - LAB40 Simulado
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  cd-simulated:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout da branch main
+        uses: actions/checkout@v4
+
+      - name: Build da imagem Docker tagueada com SHA
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          docker build -t lab40:feature06 -t lab40:$SHORT_SHA .
+
+      - name: Exportar imagem para arquivo .tar
+        run: docker save lab40:feature06 -o lab40-feature06.tar
+
+      - name: Gerar deployment-record.txt
+        run: |
+          cat <<EOF > deployment-record.txt
+          Repositório: ${{ github.repository }}
+          Referência: ${{ github.ref }}
+          SHA do Commit: ${{ github.sha }}
+          Imagem Docker: lab40:feature06
+          Status: Simulação de entrega concluída com sucesso
+          EOF
+
+      - name: Publicar artefatos de entrega
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab40-delivery-record
+          path: |
+            lab40-feature06.tar
+            deployment-record.txt
